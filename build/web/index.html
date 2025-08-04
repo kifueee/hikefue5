@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="HikeFue Web - Admin & Organizer Dashboard">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="HikeFue Web">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>HikeFue Web</title>
+  <link rel="manifest" href="manifest.json">
+
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    const serviceWorkerVersion = "2971471988";
+  </script>
+  <!-- App Check Debug Token -->
+  <script>
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  </script>
+  <!-- This script adds the flutter initialization JS code -->
+  <script src="flutter.js" defer></script>
+
+  <!-- Google Maps JavaScript API -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC4Id-7sFnJhopu6ZCpXTvSYxkQQVBk59c&libraries=places" async defer></script>
+
+  <script>
+    window.addEventListener('load', function(ev) {
+      var loading = document.querySelector('#loading');
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
+            appRunner.runApp({
+              entrypoint: 'web_app.dart'
+            }).then(function(app) {
+              // Hide the loading indicator
+              loading.style.display = 'none';
+            });
+          });
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div id="loading">
+    <style>
+      body {
+        background: linear-gradient(135deg, #6B8E23, #556B2F, #2F4F2F);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      #loading {
+        text-align: center;
+        padding: 20px;
+        max-width: 600px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      }
+      .loading-text {
+        color: #556B2F;
+        font-size: 24px;
+        margin-top: 16px;
+        font-weight: bold;
+      }
+      .loading-subtitle {
+        color: #666;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+    </style>
+    <div class="loading-text">Loading HikeFue Web...</div>
+    <div class="loading-subtitle">Admin & Organizer Dashboard</div>
+  </div>
+  <script>
+    // Store all autocomplete instances by id
+    const autocompleteInstances = {};
+  
+    window.addEventListener('init-autocomplete', function(e) {
+      const detail = e.detail || {};
+      const id = detail.id || 'autocomplete-search-box';
+      const country = detail.country || 'my';
+      const input = document.getElementById(id);
+      if (!input) return;
+  
+      // Clean up existing instance if it exists
+      if (autocompleteInstances[id]) {
+        google.maps.event.clearInstanceListeners(autocompleteInstances[id]);
+        delete autocompleteInstances[id];
+      }
+  
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        // types: [], // Commented out to allow all types (addresses, businesses, etc.)
+        componentRestrictions: { country: country }
+      });
+      autocompleteInstances[id] = autocomplete;
+  
+      autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (place && place.geometry) {
+          window.dispatchEvent(new CustomEvent(`${id}-selected`, {
+            detail: {
+              address: place.formatted_address,
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng()
+            }
+          }));
+        }
+      });
+    });
+
+    // Add cleanup function
+    window.addEventListener('cleanup-autocomplete', function(e) {
+      const detail = e.detail || {};
+      const id = detail.id || 'autocomplete-search-box';
+      
+      if (autocompleteInstances[id]) {
+        google.maps.event.clearInstanceListeners(autocompleteInstances[id]);
+        delete autocompleteInstances[id];
+      }
+    });
+  </script>
+</body>
+</html>
