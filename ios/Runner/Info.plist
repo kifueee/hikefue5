@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- ... other existing entries ... -->
+    
+    <!-- Location Permissions -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app needs access to location to show your position on the map and calculate routes.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>This app needs access to location to show your position on the map and calculate routes.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>This app needs access to location to show your position on the map and calculate routes.</string>
+    
+    <!-- Google Maps API Key -->
+    <key>io.flutter.embedded_views_preview</key>
+    <true/>
+    <key>GoogleMapsApiKey</key>
+    <string>AIzaSyAE4jbrjU5QiNVa2EvocVgFdsR__c-kCRE</string>
+    
+    <!-- Camera Permission for QR Code Scanning -->
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to scan QR codes for event check-in.</string>
+    
+    <!-- ... rest of the existing entries ... -->
+</dict>
+</plist> 

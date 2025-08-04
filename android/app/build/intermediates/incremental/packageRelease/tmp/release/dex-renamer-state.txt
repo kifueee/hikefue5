@@ -1,0 +1,4 @@
+#Wed Apr 16 23:56:51 SGT 2025
+base.0=C\:\\Users\\user\\StudioProjects\\hikefue5\\android\\app\\build\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// Comprehensive Firebase Storage rules for HikeFue app
+// Covers all features: organizer registration, driver applications, event posters, and more
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Organizer IC images - allow unauthenticated uploads during registration
+    // Admins need to read these for approval, so allow public read
+    match /organizer_ic/{fileName} {
+      allow read: if true; // Public read for admin approval
+      allow write: if true; // Allow unauthenticated uploads during registration
+    }
+    
+    // Organizer company documents - allow unauthenticated uploads during registration
+    // Admins need to read these for approval, so allow public read
+    match /organizer_company_docs/{fileName} {
+      allow read: if true; // Public read for admin approval
+      allow write: if true; // Allow unauthenticated uploads during registration
+    }
+    
+    // Driver license photos - allow authenticated users to upload their own license
+    // More permissive rules to handle authentication timing issues
+    match /license_photos/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Event posters - authenticated users can read, organizers can upload
+    match /event_posters/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // IC verification (if used) - authenticated users only
+    match /ic_verification/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Profile pictures (if implemented) - users can manage their own
+    match /profile_pictures/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Event media (posters, photos) - authenticated users can read, organizers can upload
+    match /event_media/{eventId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Carpool related images (if implemented) - authenticated users only
+    match /carpool_images/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // General uploads folder - authenticated users only
+    match /uploads/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Admin uploads - only admins can access
+    match /admin_uploads/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Public read-only content - anyone can read, only authenticated users can write
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

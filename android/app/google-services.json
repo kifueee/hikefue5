@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "378043411691",
+    "project_id": "hikefue5-8f6ae",
+    "storage_bucket": "hikefue5-8f6ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:378043411691:android:2082af74922c9ceac2e2ae",
+        "android_client_info": {
+          "package_name": "com.example.hikefue5"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5T4LbCGn8V9XHFsO2Dces9M36yG25tGw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
