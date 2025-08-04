@@ -1,0 +1,12 @@
+name: hikefue5
+static_sites:
+- name: hikefue5-web
+  source_dir: /
+  build_command: |
+    flutter pub get
+    flutter build web --release
+  output_dir: build/web
+  catchall_document: index.html
+  error_document: index.html
+  routes:
+  - path: /
