@@ -10,6 +10,7 @@ import 'services/auth_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'widgets/notification_listener.dart';
+import 'web_app.dart' as web_app;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -17,30 +18,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // MOBILE ONLY - If running on web, don't run this app
+  // MOBILE ONLY - If running on web, redirect to web app
   if (kIsWeb) {
-    print('ERROR: main.dart should not run on web! Use web_app.dart instead.');
-    runApp(const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error, size: 64, color: Colors.red),
-              SizedBox(height: 16),
-              Text(
-                'WRONG APP!',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text('This is the MOBILE app for PARTICIPANTS'),
-              SizedBox(height: 8),
-              Text('Use web_app.dart for organizers and admins'),
-            ],
-          ),
-        ),
-      ),
-    ));
+    // Run the web app instead
+    web_app.main();
     return;
   }
   

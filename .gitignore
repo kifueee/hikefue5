@@ -59,7 +59,7 @@ firebase-debug.*.log
 .netlify
 
 # DigitalOcean
-.do/
+# .do/
 
 # Node modules
 node_modules/
