@@ -41,7 +41,7 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
   void initState() {
     super.initState();
     eventData = widget.eventData;
-    _mainTabController = TabController(length: 4, vsync: this);
+    _mainTabController = TabController(length: 3, vsync: this);
     _carpoolTabController = TabController(length: 4, vsync: this);
   }
 
@@ -95,11 +95,6 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
         title: Text('Manage Event', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.analytics_outlined),
-            tooltip: 'Analytics',
-            onPressed: () => _mainTabController.animateTo(4),
-          ),
           IconButton(
             icon: const Icon(Icons.download_outlined),
             tooltip: 'Export',
@@ -158,8 +153,6 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
                 return _buildParticipantsTab(participantList, paidCount, unpaidCount);
               case 2:
                 return _buildCarpoolManagementTab();
-              case 3:
-                return _buildAnalyticsTab(participantList, paidCount, unpaidCount);
               default:
                 return _buildOverviewTab();
             }
@@ -500,7 +493,6 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
           Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
           Tab(icon: Icon(Icons.people), text: 'Participants'),
           Tab(icon: Icon(Icons.directions_car), text: 'Carpools'),
-          Tab(icon: Icon(Icons.analytics), text: 'Analytics'),
         ],
       ),
     );
@@ -1067,27 +1059,7 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
                       children: [
                         Text('${selectedParticipants.length} selected', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 24),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.email),
-                          label: const Text('Email Selected'),
-                          style: ElevatedButton.styleFrom(backgroundColor: accentColor, foregroundColor: Colors.white),
-                          onPressed: () {
-                            final emails = filteredList
-                                .where((p) => selectedParticipants.contains(p['id']))
-                                .map((p) => p['email'])
-                                .where((email) => email != null && email.toString().isNotEmpty)
-                                .cast<String>()
-                                .toList();
-                            if (emails.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('No valid email addresses found for selected participants.')),
-                              );
-                              return;
-                            }
-                            _launchBulkEmail(emails, subject: 'Message from HikeFue', body: 'Hi,\n\nThis is a message from the event organizer.');
-                          },
-                        ),
-                        const SizedBox(width: 12),
+
                         ElevatedButton.icon(
                           icon: const Icon(Icons.edit),
                           label: const Text('Update Status'),
@@ -2782,10 +2754,16 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
         },
       }, SetOptions(merge: true));
       
+      // Send email notification to the driver
+      await _sendDriverApprovalEmail(driverEmail, driverName, eventData['name'] ?? 'Event');
+      
+      // Send in-app notification
+      await _sendDriverApprovalNotification(userId, driverName, eventData['name'] ?? 'Event');
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Driver application approved for $driverName'),
+            content: Text('Driver application approved for $driverName. Notification sent.'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -3419,23 +3397,7 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
     );
   }
 
-  Future<void> _launchBulkEmail(List<String> emails, {String? subject, String? body}) async {
-    final mailtoUri = Uri(
-      scheme: 'mailto',
-      path: emails.join(','),
-      query: [
-        if (subject != null) 'subject=${Uri.encodeComponent(subject)}',
-        if (body != null) 'body=${Uri.encodeComponent(body)}',
-      ].join('&'),
-    );
-    if (await canLaunchUrl(mailtoUri)) {
-      await launchUrl(mailtoUri);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open email client.')),
-      );
-    }
-  }
+
 
   Widget _buildEventDetailsCard() {
     return _buildModernCard(
@@ -3468,13 +3430,7 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
             Colors.blue,
             () => _editEventDetails(),
           ),
-          const SizedBox(height: 12),
-          _buildActionButton(
-            'Send Bulk Email',
-            Icons.email,
-            accentColor,
-            () => _sendBulkEmail(),
-          ),
+
           const SizedBox(height: 12),
           _buildActionButton(
             'Export Participants',
@@ -3807,15 +3763,263 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
   }
 
   void _editEventDetails() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit feature coming soon!')),
+    _showEditEventDialog();
+  }
+
+  void _showEditEventDialog() {
+    final nameController = TextEditingController(text: eventData['name'] ?? '');
+    final descriptionController = TextEditingController(text: eventData['description'] ?? '');
+    final difficultyController = TextEditingController(text: eventData['details']?['difficulty'] ?? '');
+    final maxParticipantsController = TextEditingController(text: (eventData['details']?['maxParticipants'] ?? 0).toString());
+    final eventFeeController = TextEditingController(text: (eventData['pricing']?['eventFee'] ?? 0).toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: darkBackgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Edit Event Details',
+          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  style: GoogleFonts.poppins(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Event Name',
+                    labelStyle: GoogleFonts.poppins(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: accentColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  style: GoogleFonts.poppins(color: Colors.white),
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    labelStyle: GoogleFonts.poppins(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: accentColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: difficultyController,
+                        style: GoogleFonts.poppins(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'Difficulty',
+                          labelStyle: GoogleFonts.poppins(color: Colors.white70),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white30),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: accentColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: maxParticipantsController,
+                        style: GoogleFonts.poppins(color: Colors.white),
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Max Participants',
+                          labelStyle: GoogleFonts.poppins(color: Colors.white70),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white30),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: accentColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: eventFeeController,
+                  style: GoogleFonts.poppins(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Event Fee (RM)',
+                    labelStyle: GoogleFonts.poppins(color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: accentColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _updateEventDetails(
+                nameController.text,
+                descriptionController.text,
+                difficultyController.text,
+                int.tryParse(maxParticipantsController.text) ?? 0,
+                double.tryParse(eventFeeController.text) ?? 0.0,
+              );
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: accentColor),
+            child: Text('Save Changes', style: GoogleFonts.poppins(color: darkBackgroundColor)),
+          ),
+        ],
+      ),
     );
   }
 
-  void _sendBulkEmail() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Bulk email feature coming soon!')),
-    );
+  Future<void> _updateEventDetails(String name, String description, String difficulty, int maxParticipants, double eventFee) async {
+    try {
+      await FirebaseFirestore.instance.collection('events').doc(widget.eventId).update({
+        'name': name,
+        'description': description,
+        'details.difficulty': difficulty,
+        'details.maxParticipants': maxParticipants,
+        'pricing.eventFee': eventFee,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Update local data
+      setState(() {
+        eventData['name'] = name;
+        eventData['description'] = description;
+        eventData['details'] = {...eventData['details'] ?? {}, 'difficulty': difficulty, 'maxParticipants': maxParticipants};
+        eventData['pricing'] = {...eventData['pricing'] ?? {}, 'eventFee': eventFee};
+      });
+
+      // Send notification to participants about event update
+      await _sendEventUpdateNotification(name);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Event details updated successfully', style: GoogleFonts.poppins()),
+          backgroundColor: accentColor,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating event details: $e', style: GoogleFonts.poppins()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _sendEventUpdateNotification(String eventName) async {
+    try {
+      final participants = eventData['participants'] as Map<String, dynamic>? ?? {};
+      
+      for (final participantId in participants.keys) {
+        await FirebaseFirestore.instance.collection('notifications').add({
+          'userId': participantId,
+          'title': 'Event Updated',
+          'message': 'The event "$eventName" has been updated. Please check the latest details.',
+          'type': 'event_update',
+          'eventId': widget.eventId,
+          'createdAt': FieldValue.serverTimestamp(),
+          'read': false,
+        });
+      }
+    } catch (e) {
+      print('Error sending update notifications: $e');
+    }
+  }
+
+  Future<void> _sendDriverApprovalEmail(String driverEmail, String driverName, String eventName) async {
+    try {
+      // Send email via Firebase Functions or your email service
+      await FirebaseFirestore.instance.collection('mail').add({
+        'to': [driverEmail],
+        'message': {
+          'subject': 'Driver Application Approved - HikeFue',
+          'html': '''
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background-color: #004A4D; color: white; padding: 20px; text-align: center;">
+                <h1>HikeFue</h1>
+                <h2>Driver Application Approved!</h2>
+              </div>
+              <div style="padding: 20px;">
+                <p>Dear $driverName,</p>
+                <p>Congratulations! Your driver application for the event "<strong>$eventName</strong>" has been approved by the organizer.</p>
+                <p>You can now:</p>
+                <ul>
+                  <li>Create carpool offers for this event</li>
+                  <li>Accept carpool requests from other participants</li>
+                  <li>Manage your rides through the HikeFue app</li>
+                </ul>
+                <p>Thank you for being part of the HikeFue community!</p>
+                <p>Best regards,<br>The HikeFue Team</p>
+              </div>
+              <div style="background-color: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666;">
+                <p>This is an automated message from HikeFue. Please do not reply to this email.</p>
+              </div>
+            </div>
+          ''',
+        },
+      });
+    } catch (e) {
+      print('Error sending driver approval email: $e');
+    }
+  }
+
+  Future<void> _sendDriverApprovalNotification(String userId, String driverName, String eventName) async {
+    try {
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': userId,
+        'title': 'Driver Application Approved',
+        'message': 'Your driver application for "$eventName" has been approved! You can now create carpool offers.',
+        'type': 'driver_approval',
+        'eventId': widget.eventId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'read': false,
+      });
+    } catch (e) {
+      print('Error sending driver approval notification: $e');
+    }
   }
 
   double _calculateRevenue() {

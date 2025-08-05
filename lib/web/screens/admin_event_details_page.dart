@@ -978,41 +978,19 @@ class _AdminEventDetailsPageState extends State<AdminEventDetailsPage> with Tick
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (status != 'approved')
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ElevatedButton.icon(
-                            onPressed: () => onUpdateStatus('approved'),
-                            icon: const Icon(Icons.check_circle),
-                            label: const Text('Approve Event'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ),
+                if (status != 'approved')
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => onUpdateStatus('approved'),
+                      icon: const Icon(Icons.check_circle),
+                      label: const Text('Approve Event'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
                       ),
-                    if (status != 'rejected')
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: ElevatedButton.icon(
-                            onPressed: () => onUpdateStatus('rejected'),
-                            icon: const Icon(Icons.cancel),
-                            label: const Text('Reject Event'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                )
+                    ),
+                  )
               ],
             ),
             status: status,

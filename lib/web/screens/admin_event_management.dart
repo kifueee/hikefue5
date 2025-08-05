@@ -59,7 +59,7 @@ class _AdminEventManagementState extends State<AdminEventManagement> with Single
         _eventStats = {
           'total': events.docs.length,
           'approved': events.docs.where((doc) => doc.data()['status'] == 'approved').length,
-          'rejected': events.docs.where((doc) => doc.data()['status'] == 'rejected').length,
+          'pending': events.docs.where((doc) => doc.data()['status'] == 'pending').length,
           'featured': events.docs.where((doc) => doc.data()['isFeatured'] == true).length,
         };
       });
@@ -655,7 +655,7 @@ class _AdminEventManagementState extends State<AdminEventManagement> with Single
           children: [
             _buildStatsCard('Total Events', _eventStats['total'], const Color(0xFF6B8E23)),
             _buildStatsCard('Approved', _eventStats['approved'], const Color(0xFF228B22)),
-            _buildStatsCard('Rejected', _eventStats['rejected'], const Color(0xFF8B4513)),
+            _buildStatsCard('Pending', _eventStats['pending'], const Color(0xFFFF9800)),
             _buildStatsCard('Featured', _eventStats['featured'], const Color(0xFF8FBC8F)),
           ],
         ),
@@ -699,7 +699,7 @@ class _AdminEventManagementState extends State<AdminEventManagement> with Single
             controller: _tabController,
             children: [
               _buildEventList('approved'),
-              _buildEventList('rejected'),
+              _buildEventList('pending'),
               _buildFeaturedEvents(),
             ],
           ),

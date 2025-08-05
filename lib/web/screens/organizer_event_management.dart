@@ -975,23 +975,7 @@ class _OrganizerEventManagementState extends State<OrganizerEventManagement> {
     );
   }
 
-  Future<void> _launchBulkEmail(List<String> emails, {String? subject, String? body}) async {
-    final mailtoUri = Uri(
-      scheme: 'mailto',
-      path: emails.join(','),
-      query: [
-        if (subject != null) 'subject=${Uri.encodeComponent(subject)}',
-        if (body != null) 'body=${Uri.encodeComponent(body)}',
-      ].join('&'),
-    );
-    if (await canLaunchUrl(mailtoUri)) {
-      await launchUrl(mailtoUri);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open email client.')),
-      );
-    }
-  }
+
 
   void _handleBulkUpdateStatus(String eventId, Set<String> selected, List<Map<String, dynamic>> participantList) {
     ScaffoldMessenger.of(context).showSnackBar(

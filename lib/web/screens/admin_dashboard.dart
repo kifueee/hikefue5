@@ -1212,6 +1212,18 @@ class _AdminDashboardState extends State<AdminDashboard> with TickerProviderStat
                                   ),
                                 ),
                               ],
+                              if (status == 'approved') ...[
+                                _actionButton(
+                                  'Delete',
+                                  Colors.red,
+                                  Icons.delete,
+                                  () => _showConfirmDialog(
+                                    title: 'Delete Organizer',
+                                    content: 'Are you sure you want to delete this organizer? This will also delete all their events and cannot be undone.',
+                                    onConfirm: () => _deleteOrganizer(organizers[index].id, name),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                           const Divider(height: 32),
@@ -1483,6 +1495,46 @@ class _AdminDashboardState extends State<AdminDashboard> with TickerProviderStat
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating status: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _deleteOrganizer(String organizerId, String organizerName) async {
+    try {
+      setState(() => _isLoading = true);
+      
+      // Get all events by this organizer
+      final eventsQuery = await _firestore
+          .collection('events')
+          .where('organizer.id', isEqualTo: organizerId)
+          .get();
+      
+      // Delete all events by this organizer
+      final batch = _firestore.batch();
+      for (final eventDoc in eventsQuery.docs) {
+        batch.delete(eventDoc.reference);
+      }
+      
+      // Delete the organizer document
+      batch.delete(_firestore.collection('organizers').doc(organizerId));
+      
+      // Commit the batch delete
+      await batch.commit();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Organizer "$organizerName" and ${eventsQuery.docs.length} events deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting organizer: $e')),
         );
       }
     } finally {
