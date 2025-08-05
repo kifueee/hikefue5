@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/event_status_service.dart';
 
 const Color primaryColor = Color(0xFF004A4D);
@@ -284,11 +285,25 @@ class EventDetailsPage extends StatelessWidget {
                             if (imageUrl != null && imageUrl.isNotEmpty)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  imageUrl,
+                                child: CachedNetworkImage(
+                                  imageUrl: imageUrl,
                                   width: 240,
                                   height: 140,
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    width: 240,
+                                    height: 140,
+                                    color: Colors.grey.shade200,
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Container(
+                                    width: 240,
+                                    height: 140,
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                                  ),
                                 ),
                               )
                             else

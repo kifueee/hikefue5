@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'event_details_page.dart';
 import 'package:excel/excel.dart' as excel;
 import 'package:url_launcher/url_launcher.dart';
@@ -309,12 +310,24 @@ class _OrganizerEventManagementState extends State<OrganizerEventManagement> {
         children: [
           // Banner image
           if (posterUrl != null && posterUrl.isNotEmpty)
-            Container(
+            SizedBox(
               height: 180,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(posterUrl),
-                  fit: BoxFit.cover,
+              child: CachedNetworkImage(
+                imageUrl: posterUrl,
+                width: double.infinity,
+                height: 180,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  height: 180,
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  height: 180,
+                  color: Colors.grey.shade200,
+                  child: const Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
                 ),
               ),
             )

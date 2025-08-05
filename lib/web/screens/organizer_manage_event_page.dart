@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:excel/excel.dart' as excel;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:html' as html;
@@ -286,12 +287,20 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: imageUrl != null && imageUrl.isNotEmpty
-                    ? Image.network(
-                        imageUrl,
+                    ? CachedNetworkImage(
+                        imageUrl: imageUrl,
                         width: 120,
                         height: 80,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
+                        placeholder: (context, url) => Container(
+                          width: 120,
+                          height: 80,
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) =>
                             _buildPlaceholderImage(120, 80),
                       )
                     : _buildPlaceholderImage(120, 80),
@@ -620,11 +629,25 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
             if (imageUrl != null && imageUrl.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
                   width: 220,
                   height: 140,
                   fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    width: 220,
+                    height: 140,
+                    color: Colors.grey.shade200,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    width: 220,
+                    height: 140,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                  ),
                 ),
               )
             else
@@ -1379,10 +1402,16 @@ class _OrganizerManageEventPageState extends State<OrganizerManageEventPage> wit
                                       ),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          licensePhotoUrl,
+                                        child: CachedNetworkImage(
+                                          imageUrl: licensePhotoUrl,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
+                                          placeholder: (context, url) => Container(
+                                            color: Colors.grey[200],
+                                            child: const Center(
+                                              child: CircularProgressIndicator(),
+                                            ),
+                                          ),
+                                          errorWidget: (context, url, error) {
                                             return Container(
                                               color: Colors.grey[200],
                                               child: const Icon(Icons.error, color: Colors.grey),

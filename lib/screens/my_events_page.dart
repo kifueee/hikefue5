@@ -12,7 +12,6 @@ import 'package:hikefue5/screens/toyyibpay_payment_page.dart';
 import 'package:hikefue5/screens/event_rating_page.dart';
 import 'package:hikefue5/services/rating_service.dart';
 import 'package:hikefue5/services/event_status_service.dart';
-import 'package:hikefue5/models/payment_status.dart';
 
 // New Color Palette
 const Color primaryColor = Color(0xFF004A4D);
@@ -114,7 +113,7 @@ class _MyEventsPageState extends State<MyEventsPage>
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection('events')
-          .where('participants.$userId', isNull: false)
+          .where('status', isEqualTo: 'approved')
           .orderBy('date', descending: !isUpcoming)
           .snapshots(),
       builder: (context, snapshot) {
@@ -167,7 +166,22 @@ class _MyEventsPageState extends State<MyEventsPage>
           );
         }
 
-        final events = snapshot.data!.docs.map((doc) {
+        // Filter events where user is a participant
+        final allEvents = snapshot.data!.docs;
+        final userEvents = allEvents.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final participants = data['participants'] as Map<String, dynamic>? ?? {};
+          final userParticipant = participants[userId] as Map<String, dynamic>?;
+          
+          // Check if user is a participant with valid status
+          if (userParticipant != null) {
+            final userStatus = userParticipant['status'] as String?;
+            return ['registered', 'confirmed', 'pending_payment', 'completed'].contains(userStatus);
+          }
+          return false;
+        }).toList();
+
+        final events = userEvents.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           data['id'] = doc.id;
           return data;

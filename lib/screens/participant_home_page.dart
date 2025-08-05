@@ -829,20 +829,30 @@ class ParticipantHomePage extends StatelessWidget {
         return;
       }
 
-      // Simplified query - get events where user is a participant
+      // Get all events and filter for user participation
       final eventsSnapshot = await FirebaseFirestore.instance
           .collection('events')
-          .where('participants.$userId', isEqualTo: true)
           .get();
 
       if (!context.mounted) return;
 
-      // Filter events to only show active ones
+      // Filter events to only show active ones where user is a participant
       final activeEvents = eventsSnapshot.docs.where((doc) {
         final data = doc.data();
         final status = data['status'] as String?;
         final eventStatus = data['eventStatus'] as String?;
+        final participants = data['participants'] as Map<String, dynamic>? ?? {};
         
+        // Check if user is a participant
+        final userParticipant = participants[userId] as Map<String, dynamic>?;
+        if (userParticipant == null) return false;
+        
+        // Check if user has a valid status
+        final userStatus = userParticipant['status'] as String?;
+        final isValidStatus = ['registered', 'confirmed', 'pending_payment', 'completed'].contains(userStatus);
+        if (!isValidStatus) return false;
+        
+        // Check if event is active
         return status == 'approved' && 
                (eventStatus == 'published' || eventStatus == 'started' || eventStatus == 'ongoing');
       }).toList();

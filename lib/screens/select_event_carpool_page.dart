@@ -73,8 +73,8 @@ class SelectEventCarpoolPage extends StatelessWidget {
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection('events')
-                        .where('participants', arrayContains: user?.email)
-                        .where('status', isEqualTo: 'Upcoming')
+                        .where('status', isEqualTo: 'approved')
+                        .where('eventStatus', whereIn: ['published', 'started', 'ongoing'])
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -95,6 +95,22 @@ class SelectEventCarpoolPage extends StatelessWidget {
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                         return const Center(
                           child: Text(
+                            'No upcoming events found.',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      }
+
+                      // Filter events where user is a participant
+                      final userEvents = snapshot.data!.docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final participants = data['participants'] as Map<String, dynamic>? ?? {};
+                        return participants.containsKey(user?.uid);
+                      }).toList();
+
+                      if (userEvents.isEmpty) {
+                        return const Center(
+                          child: Text(
                             'You haven\'t joined any upcoming events yet.',
                             style: TextStyle(color: Colors.white),
                           ),
@@ -103,9 +119,9 @@ class SelectEventCarpoolPage extends StatelessWidget {
 
                       return ListView.builder(
                         padding: const EdgeInsets.all(16.0),
-                        itemCount: snapshot.data!.docs.length,
+                        itemCount: userEvents.length,
                         itemBuilder: (context, index) {
-                          final event = snapshot.data!.docs[index];
+                          final event = userEvents[index];
                           final eventData = event.data() as Map<String, dynamic>;
                           return _buildEventCard(context, eventData, event.id);
                         },

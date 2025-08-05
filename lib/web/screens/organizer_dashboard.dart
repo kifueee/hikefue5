@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'organizer_event_management.dart';
 import 'organizer_create_event.dart';
 import 'profile_dialog.dart';
@@ -319,11 +320,23 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
               child: imageUrl != null && imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl,
                       width: double.infinity,
                       height: 140,
                       fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        height: 140,
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        height: 140,
+                        color: Colors.grey.shade200,
+                        child: const Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                      ),
                     )
                   : Container(
                       height: 140,
